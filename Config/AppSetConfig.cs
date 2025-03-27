@@ -1,4 +1,4 @@
-﻿namespace WSOptimizerAves.Config
+﻿namespace WSOptimizerGallinas.Config
 {
     public static class AppSetConfig
     {

@@ -1,4 +1,4 @@
-﻿namespace WSOptimizerAves.Models
+﻿namespace WSOptimizerGallinas.Models
 {
     using System.Collections.Generic;
 

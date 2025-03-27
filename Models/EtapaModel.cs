@@ -1,4 +1,4 @@
-﻿namespace WSOptimizerAves.Models
+﻿namespace WSOptimizerGallinas.Models
 {
     public class EtapaModel
     {

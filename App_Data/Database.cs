@@ -1,11 +1,11 @@
-﻿namespace WSOptimizerAves.App_Data
+﻿namespace WSOptimizerGallinas.App_Data
 {
     using Microsoft.VisualBasic;
     using System;
     using System.Data;
     using System.Data.OleDb;
     using System.Text.RegularExpressions;
-    using WSOptimizerAves.Config;
+    using WSOptimizerGallinas.Config;
 
     public class Database
     {

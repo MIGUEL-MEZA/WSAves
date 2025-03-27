@@ -1,10 +1,10 @@
-﻿namespace WSOptimizerAves.Controllers
+﻿namespace WSOptimizerGallinas.Controllers
 {
     using System;
     using System.Data;
     using System.Runtime.CompilerServices;
     using System.Runtime.Intrinsics.Arm;
-    using WSOptimizerAves.Models;
+    using WSOptimizerGallinas.Models;
 
     public class Utileria
     {

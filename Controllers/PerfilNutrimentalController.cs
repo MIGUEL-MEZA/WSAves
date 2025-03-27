@@ -2,10 +2,10 @@
 using Newtonsoft.Json;
 using System.Data;
 using System.Runtime.Intrinsics.Arm;
-using WSOptimizerAves.App_Data;
-using WSOptimizerAves.Models;
+using WSOptimizerGallinas.App_Data;
+using WSOptimizerGallinas.Models;
 
-namespace WSOptimizerAves.Controllers
+namespace WSOptimizerGallinas.Controllers
 {
     public class PerfilNutrimentalController : Controller
     {
@@ -21,16 +21,16 @@ namespace WSOptimizerAves.Controllers
             
             if (objReq == null) throw new Exception("Dato incorrecto en la entrada");
 
-            string strSQLFor = "SELECT * FROM CatOptimizerP_Formula ";
+            string strSQLFor = "SELECT * FROM CatOptimizerG_Formula ";
             dtFor = Database.execQuery(strSQLFor);
 
-            string strSQLRef = "SELECT * FROM CatOptimizerP_Referencias ";
+            string strSQLRef = "SELECT * FROM CatOptimizerG_Referencias ";
             dtRef = Database.execQuery(strSQLRef);
 
-            string strSQLVar = "SELECT * FROM CatOptimizerP_Variables ";
+            string strSQLVar = "SELECT * FROM CatOptimizerG_Variables ";
             dtVar = Database.execQuery(strSQLVar);
 
-            string strSQLConst = "SELECT * FROM CatOptimizerP_Constantes ";
+            string strSQLConst = "SELECT * FROM CatOptimizerG_Constantes ";
             dtConst = Database.execQuery(strSQLConst);
 
             ResponseModel objResp = new ResponseModel();

@@ -2,10 +2,10 @@
 using Newtonsoft.Json;
 using System.Data;
 using System.Runtime.InteropServices;
-using WSOptimizerAves.App_Data;
-using WSOptimizerAves.Models;
+using WSOptimizerGallinas.App_Data;
+using WSOptimizerGallinas.Models;
 
-namespace WSOptimizerAves.Controllers
+namespace WSOptimizerGallinas.Controllers
 {
     public class ModelOptimizadoController : Controller
     {

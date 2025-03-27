@@ -1,4 +1,4 @@
-﻿namespace WSOptimizerAves.Models
+﻿namespace WSOptimizerGallinas.Models
 {
     using Newtonsoft.Json;
     using System.Collections.Generic;
