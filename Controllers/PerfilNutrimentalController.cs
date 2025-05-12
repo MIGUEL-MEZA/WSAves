@@ -13,12 +13,15 @@ namespace WSOptimizerGallinas.Controllers
         private DataTable dtVar;
         private DataTable dtConst;
         private DataTable dtFor;
+        private DataTable dtEdad;
+
+
 
         [HttpPost]
         [Route("api/data")]
         public ResponseModel GetCalculo([FromBody] RequestModel objReq)
         {
-            
+
             if (objReq == null) throw new Exception("Dato incorrecto en la entrada");
 
             string strSQLFor = "SELECT * FROM CatOptimizerG_Formula ";
@@ -33,15 +36,18 @@ namespace WSOptimizerGallinas.Controllers
             string strSQLConst = "SELECT * FROM CatOptimizerG_Constantes ";
             dtConst = Database.execQuery(strSQLConst);
 
+            string strSQLEdad = "SELECT * FROM CatOptimizerG_EdadProdPeso ";
+            dtEdad = Database.execQuery(strSQLEdad);
+
             ResponseModel objResp = new ResponseModel();
 
             objResp.Variables.Add(GetVariable1(objReq));
             objResp.Variables.Add(GetVariable2(objReq));
 
-            double iTemHum = Utileria.GetITH(objReq.Temperatura , objReq.Humedad );
-            
+            double iTemHum = Utileria.GetITH(objReq.Temperatura, objReq.Humedad);
+
             objResp.IndiceTemHum = iTemHum;
-            objResp.DescripcionTemHum = Utileria.GetITHDesVal(iTemHum ).Clave ;
+            objResp.DescripcionTemHum = Utileria.GetITHDesVal(iTemHum).Clave;
             objResp.ProductividadITH = double.Parse(Utileria.GetITHDesVal(iTemHum).Valor);
 
             objResp.Variables.Add(GetVariable3(objResp, objReq));
@@ -61,24 +67,19 @@ namespace WSOptimizerGallinas.Controllers
             objResp.Variables.Add(GetVariable17(objResp, objReq));
             objResp.Variables.Add(GetVariable18(objResp, objReq));
             objResp.Variables.Add(GetVariable19(objResp, objReq));
-            
-            objResp.Variables.Add(GetVariable24(objResp, objReq));
-            objResp.Variables.Add(GetVariable26(objResp, objReq));
-
             objResp.Variables.Add(GetVariable20(objResp, objReq));
             objResp.Variables.Add(GetVariable21(objResp, objReq));
             objResp.Variables.Add(GetVariable22(objResp, objReq));
             objResp.Variables.Add(GetVariable23(objResp, objReq));
-            
+            objResp.Variables.Add(GetVariable24(objResp, objReq));
             objResp.Variables.Add(GetVariable25(objResp, objReq));
-            
+            objResp.Variables.Add(GetVariable26(objResp, objReq));
             objResp.Variables.Add(GetVariable27(objResp, objReq));
             objResp.Variables.Add(GetVariable28(objResp, objReq));
             objResp.Variables.Add(GetVariable29(objResp, objReq));
             objResp.Variables.Add(GetVariable30(objResp, objReq));
             objResp.Variables.Add(GetVariable31(objResp, objReq));
             objResp.Variables.Add(GetVariable32(objResp, objReq));
-
             objResp.Variables.Add(GetVariable33(objResp, objReq));
             objResp.Variables.Add(GetVariable34(objResp, objReq));
             objResp.Variables.Add(GetVariable35(objResp, objReq));
@@ -91,7 +92,16 @@ namespace WSOptimizerGallinas.Controllers
             objResp.Variables.Add(GetVariable42(objResp, objReq));
             objResp.Variables.Add(GetVariable43(objResp, objReq));
             objResp.Variables.Add(GetVariable44(objResp, objReq));
-            
+            objResp.Variables.Add(GetVariable45(objResp, objReq));
+            objResp.Variables.Add(GetVariable46(objResp, objReq));
+            objResp.Variables.Add(GetVariable47(objResp, objReq));
+            objResp.Variables.Add(GetVariable48(objResp, objReq));
+            objResp.Variables.Add(GetVariable49(objResp, objReq));
+            objResp.Variables.Add(GetVariable50(objResp, objReq));
+            objResp.Variables.Add(GetVariable51(objResp, objReq));
+            objResp.Variables.Add(GetVariable52(objResp, objReq));
+            objResp.Variables.Add(GetVariable53(objResp, objReq));
+
             if (objReq.CvePerfilN > 0)
                 SaveData(objResp, objReq);
 
@@ -103,14 +113,14 @@ namespace WSOptimizerGallinas.Controllers
             return objResp;
         }
 
-    
+
 
         private void SaveData(ResponseModel objResp, RequestModel objReq)
         {
-            string strSQLParam = "DELETE OptimizerP_PerfilN_Resultado WHERE CvePerfilN =" + objReq.CvePerfilN.ToString() + "";
+            string strSQLParam = "DELETE OptimizerG_PerfilN_Resultado WHERE CvePerfilN =" + objReq.CvePerfilN.ToString() + "";
             Database.execNonQuery(strSQLParam);
 
-            strSQLParam = "INSERT INTO OptimizerP_PerfilN_Resultado(CvePerfilN,Request,Response,FecAct,UsuAct) ";
+            strSQLParam = "INSERT INTO OptimizerG_PerfilN_Resultado(CvePerfilN,Request,Response,FecAct,UsuAct) ";
             string jsonResp = JsonConvert.SerializeObject(objResp);
             string jsonReq = JsonConvert.SerializeObject(objReq);
             strSQLParam += "VALUES(" + objReq.CvePerfilN.ToString() + ",'" + jsonReq + "','" + jsonResp + "',GETDATE(),'" + objReq.UsuAct + "') ";
@@ -125,7 +135,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
-            variable.Etapas = objReq.EtapasModel.Select(p => new EtapaResModel(p.Clave, p.PesoInicial)).ToList();
+            variable.Etapas = objReq.EtapasModel.Select(p => new EtapaResModel(p.Clave, p.EdadInicial)).ToList();
             return variable;
         }
         private ResponseDataModel GetVariable2(RequestModel objReq)
@@ -135,7 +145,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
-            variable.Etapas = objReq.EtapasModel.Select(p => new EtapaResModel(p.Clave, p.PesoFinal)).ToList();
+            variable.Etapas = objReq.EtapasModel.Select(p => new EtapaResModel(p.Clave, p.EdadFinal)).ToList();
             return variable;
         }
 
@@ -159,18 +169,18 @@ namespace WSOptimizerGallinas.Controllers
             return variable;
         }
 
-        /// <summary>
-        /// Peso Inicial (Kg) *Corregido por ITH*
+        /// <sum mary>
+        /// # de días
         ///
-        ///P = a * exp(-exp(-b * (t - c)))
         /// </summary>
         /// <param name="objResp">Salida</param>
         /// <param name="objReq">Entrada</param>
-        /// <returns>_xlfn.IFS($C$6 =$I$9,$J$9 * EXP(-EXP(-$K$9 * (C15 -$L$9))),$C$6 =$I$10,$J$10 * EXP(-EXP(-$K$10 * (C15 -$L$10))),$C$6 =$I$11,$J$11 * EXP(-EXP(-$K$11 * (C15 -$L$11))),$C$6 =$I$12,$J$12 * EXP(-EXP(-$K$12 * (C15 -$L$12))),$C$6 =$I$13,$J$13 * EXP(-EXP(-$K$13 * (C15 -$L$13))),$C$6 =$I$14,$J$14 * EXP(-EXP(-$K$14 * (C15 -$L$14))))</returns>
+        /// <returns><returns>
         private ResponseDataModel GetVariable4(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable1 = Utileria.GetVariableByNum(objResp, 1);
+            ResponseDataModel variable3 = Utileria.GetVariableByNum(objResp, 3);
+
 
             variable.NoVariable = 4;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -180,25 +190,8 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = 0;
-                double valor1 = variable1.Etapas.Find(e => e.Clave == p.Clave).Valor;
-
-                double a = GetFormulas(objReq.Referencia, 1, "a");
-                double b = GetFormulas(objReq.Referencia, 1, "b");
-                double c = GetFormulas(objReq.Referencia, 1, "c");
-
-                valor = a * Math.Exp(-Math.Exp(-b * (valor1 - c)));
-
-                if (p.Clave > 1)
-                {
-                    valor += 0.014;
-                    //suma 2 veces verificar
-                    valor += 0.014;
-                }
-                if (p.Clave > 2)
-                {
-                    valor *= objResp.ProductividadITH;
-                }
-
+                double valor1 = variable3.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                valor = valor1 * 7;
 
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
@@ -206,7 +199,7 @@ namespace WSOptimizerGallinas.Controllers
             return variable;
         }
 
-        
+
         /// <summary>
         /// Peso Final  (Kg) *Corregido por ITH*
         ///
@@ -218,7 +211,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable5(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable2 = Utileria.GetVariableByNum(objResp, 2);
+            ResponseDataModel variable2 = Utileria.GetVariableByNum(objResp, 1);
 
             variable.NoVariable = 5;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -236,14 +229,7 @@ namespace WSOptimizerGallinas.Controllers
 
                 valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
 
-                valor += 0.014;
-                    //suma 2 veces verificar
-                valor += 0.014;
-                
-                if (p.Clave > 1)
-                {
-                    valor *= objResp.ProductividadITH;
-                }
+
 
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
@@ -255,9 +241,9 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable6(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable4 = Utileria.GetVariableByNum(objResp, 4);
-            ResponseDataModel variable5 = Utileria.GetVariableByNum(objResp, 5);
-            
+            ResponseDataModel variable2 = Utileria.GetVariableByNum(objResp, 2);
+
+
 
             variable.NoVariable = 6;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -266,11 +252,13 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = 0;
-                double valor4 = variable4.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor5 = variable5.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                
-                valor = Utileria.GetPromedio(valor4, valor5);
-                
+                double valor2 = variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double a = GetFormulas(objReq.Referencia, 1, "a");
+                double b = GetFormulas(objReq.Referencia, 1, "b");
+                double c = GetFormulas(objReq.Referencia, 1, "c");
+
+                valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -281,8 +269,8 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
             // comparo variable 2 y variable1        
-            ResponseDataModel variable4 = Utileria.GetVariableByNum(objResp, 4);
             ResponseDataModel variable5 = Utileria.GetVariableByNum(objResp, 5);
+            ResponseDataModel variable6 = Utileria.GetVariableByNum(objResp, 6);
 
             variable.NoVariable = 7;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -291,10 +279,11 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = 0;
-                double valor4 = variable4.Etapas.Find(e => e.Clave == p.Clave).Valor;
                 double valor5 = variable5.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                valor = valor5 - valor4;
-                return new EtapaResModel(p.Clave, valor );
+                double valor6 = variable6.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double[] valorArr = { valor5, valor6 };
+                valor = valorArr.Average();
+                return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
             return variable;
@@ -303,8 +292,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable8(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable3 = Utileria.GetVariableByNum(objResp, 3);
-            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable5 = Utileria.GetVariableByNum(objResp, 5);
+            ResponseDataModel variable6 = Utileria.GetVariableByNum(objResp, 6);
 
             variable.NoVariable = 8;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -313,13 +302,13 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = 0;
-                double valor3 = variable3.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor5 = variable5.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor6 = variable6.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                if (valor7 > 0) {
-                    valor = valor7 / valor3;
-                }
-                
+
+                valor = valor6 - valor5;
+
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -337,15 +326,7 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
             ResponseDataModel variable4 = Utileria.GetVariableByNum(objResp, 4);
-
-            List<CatalogoModel> lstCat = new List<CatalogoModel>();
-
-            lstCat.Add(new CatalogoModel("1", "1.00"));
-            lstCat.Add(new CatalogoModel("2", "1.10"));
-            lstCat.Add(new CatalogoModel("3", "1.08"));
-            lstCat.Add(new CatalogoModel("4", "1.06"));
-            lstCat.Add(new CatalogoModel("5", "1.02"));
-            
+            ResponseDataModel variable8 = Utileria.GetVariableByNum(objResp, 8);
 
             variable.NoVariable = 9;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -355,10 +336,10 @@ namespace WSOptimizerGallinas.Controllers
             {
                 double valor = 0;
                 double valor4 = variable4.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                valor = valor4;
-                if (objReq.PreIniciadorNupio.Equals ("SI") ){
-                    valor *= double.Parse(lstCat.Find(r => p.Clave.ToString().Equals(r.Clave)).Valor);
-                }
+                double valor8 = variable8.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                valor = valor8 / valor4;
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -376,15 +357,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable10(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable5 = Utileria.GetVariableByNum(objResp, 5);
-
-            List<CatalogoModel> lstCat = new List<CatalogoModel>();
-      
-            lstCat.Add(new CatalogoModel("1", "1.10"));
-            lstCat.Add(new CatalogoModel("2", "1.08"));
-            lstCat.Add(new CatalogoModel("3", "1.06"));
-            lstCat.Add(new CatalogoModel("4", "1.02"));
-            lstCat.Add(new CatalogoModel("5", "1.00"));
+            ResponseDataModel variable1 = Utileria.GetVariableByNum(objResp, 1);
 
             variable.NoVariable = 10;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -393,12 +366,13 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = 0;
-                double valor5 = variable5.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                valor = valor5;
-                if (objReq.PreIniciadorNupio.Equals("SI"))
+
+                if (p.tipoEtapa > 0)
                 {
-                    valor *= double.Parse(lstCat.Find(r => p.Clave.ToString().Equals(r.Clave)).Valor);
+                    int edad = (int)variable1.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    valor = Utileria.GetEdadProdPeso(dtEdad, objReq.Referencia, edad, 1);
                 }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -408,8 +382,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable11(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
-            ResponseDataModel variable10 = Utileria.GetVariableByNum(objResp, 10);
+            ResponseDataModel variable2 = Utileria.GetVariableByNum(objResp, 2);
 
             variable.NoVariable = 11;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -417,10 +390,14 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor10 = variable10.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double promedio =Utileria.GetPromedio(valor9, valor10);
-                double valor = promedio;
+                double valor = 0;
+
+                if (p.tipoEtapa > 0)
+                {
+                    int edad = (int)variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    valor = Utileria.GetEdadProdPeso(dtEdad, objReq.Referencia, edad, 1);
+                }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -429,8 +406,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable12(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
             ResponseDataModel variable10 = Utileria.GetVariableByNum(objResp, 10);
+            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
 
             variable.NoVariable = 12;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -438,9 +415,13 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor = 0;
                 double valor10 = variable10.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor10-valor9;
+                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double[] valorArr = { valor10, valor11 };
+                valor = valorArr.Average();
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -449,22 +430,24 @@ namespace WSOptimizerGallinas.Controllers
 
         private ResponseDataModel GetVariable13(ResponseModel objResp, RequestModel objReq)
         {
+
             ResponseDataModel variable = new();
-            ResponseDataModel variable3 = Utileria.GetVariableByNum(objResp, 3);
-            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
-            ResponseDataModel variable10 = Utileria.GetVariableByNum(objResp, 10);
+            ResponseDataModel variable1 = Utileria.GetVariableByNum(objResp, 1);
 
             variable.NoVariable = 13;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
-            
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor3 = variable3.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor10 = variable10.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = (valor10 - valor9)/valor3;
+                double valor = 0;
+
+                if (p.tipoEtapa > 0)
+                {
+                    int edad = (int)variable1.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    valor = Utileria.GetEdadProdPeso(dtEdad, objReq.Referencia, edad, 2);
+                }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -474,6 +457,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable14(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            ResponseDataModel variable2 = Utileria.GetVariableByNum(objResp, 2);
 
             variable.NoVariable = 14;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -481,7 +465,14 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = objReq.EtapasModel.Find(e => e.Clave == p.Clave).EMAlimento;
+                double valor = 0;
+
+                if (p.tipoEtapa > 0)
+                {
+                    int edad = (int)variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    valor = Utileria.GetEdadProdPeso(dtEdad, objReq.Referencia, edad, 2);
+                }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -498,8 +489,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable15(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
             ResponseDataModel variable13 = Utileria.GetVariableByNum(objResp, 13);
+            ResponseDataModel variable14 = Utileria.GetVariableByNum(objResp, 14);
 
             variable.NoVariable = 15;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -507,11 +498,14 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = 0;
                 double valor13 = variable13.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                
-                double valor = Utileria.GetEnergiaMetabolizante(dtFor,objReq.Referencia, valor11, valor13);
-                
+                double valor14 = variable14.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double[] valorArr = { valor13, valor14 };
+                valor = valorArr.Average();
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -520,8 +514,6 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable16(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable14 = Utileria.GetVariableByNum(objResp, 14);
-            ResponseDataModel variable15 = Utileria.GetVariableByNum(objResp, 15);
 
             variable.NoVariable = 16;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -530,9 +522,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor;
-                double valor14 = variable14.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor15 = variable15.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                valor = valor15 / valor14;
+                valor = p.pesoObjetivo;
 
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
@@ -548,9 +538,10 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable17(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            
-            ResponseDataModel variable16 = Utileria.GetVariableByNum(objResp, 16);
-            
+
+            ResponseDataModel variable12 = Utileria.GetVariableByNum(objResp, 12);
+            ResponseDataModel variable15 = Utileria.GetVariableByNum(objResp, 15);
+
 
             variable.NoVariable = 17;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -558,8 +549,9 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor16 = variable16.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor16 / (1-(objReq.Desperdicio /100));
+                double valor12 = variable12.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor15 = variable15.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor = (valor12 * valor15) / 100;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -569,8 +561,10 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable18(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable3 = Utileria.GetVariableByNum(objResp, 3);
-            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
+
+            ResponseDataModel variable12 = Utileria.GetVariableByNum(objResp, 12);
+            ResponseDataModel variable16 = Utileria.GetVariableByNum(objResp, 16);
+
 
             variable.NoVariable = 18;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -578,9 +572,9 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor3 = variable3.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor17 *valor3;
+                double valor12 = variable12.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor16 = variable16.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor = (valor12 * valor16) / 100;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -596,8 +590,6 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable19(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable12 = Utileria.GetVariableByNum(objResp, 12);
-            ResponseDataModel variable18 = Utileria.GetVariableByNum(objResp, 18);
 
             variable.NoVariable = 19;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -605,9 +597,8 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor12 = variable12.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor18 = variable18.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor18/valor12;
+
+                double valor = 0;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -624,20 +615,14 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable20(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            
-            ResponseDataModel variable15 = Utileria.GetVariableByNum(objResp, 15);
-            ResponseDataModel variable24 = Utileria.GetVariableByNum(objResp, 24);
-            
+
             variable.NoVariable = 20;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor15 = variable15.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor24 = variable24.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                
-                double valor = (valor24/valor15)*1000;
+                double valor = 0;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -648,8 +633,8 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
 
-            ResponseDataModel variable15 = Utileria.GetVariableByNum(objResp, 15);
-            ResponseDataModel variable26 = Utileria.GetVariableByNum(objResp, 26);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
+            ResponseDataModel variable18 = Utileria.GetVariableByNum(objResp, 18);
 
             variable.NoVariable = 21;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -657,10 +642,15 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor15 = variable15.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor26 = variable26.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor18 = variable18.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double valor = (valor26 / valor15) * 1000;
+                double valConstante = 0.0145;
+                if (p.Clave > 7)
+                {
+                    valConstante = 0.014;
+                }
+                double valor = (valor17 - valor18) * valConstante;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -677,7 +667,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 22, p.Clave);
+                double valor = p.EMAlimento;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -694,19 +684,32 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
             // comparo variable 2 y variable1        
-            ResponseDataModel variable24 = Utileria.GetVariableByNum(objResp, 24);
-            ResponseDataModel variable13 = Utileria.GetVariableByNum(objResp, 13);
-            
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
+
             variable.NoVariable = 23;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor24 = variable24.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor13 = variable13.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double valor = (valor24 / valor13) ;
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                int tipoValor = Constantes.EM_CRIANZA;
+                if (p.tipoEtapa == 2)
+                {
+                    tipoValor = Constantes.EM_PREPOSTURA;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tipoValor = Constantes.EM_POSTURA;
+                }
+
+                double valor = Utileria.GetFormulaData(dtFor, objReq.Referencia, valor7, valor9, tipoValor, valor17);
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -722,12 +725,9 @@ namespace WSOptimizerGallinas.Controllers
         /// <returns>Lisina Digestible (g/d)	 Lis.Dig. = (a* P ^ X ) + (b + c* GDP + d* GDP^2)*P</returns>
         private ResponseDataModel GetVariable24(ResponseModel objResp, RequestModel objReq)
         {
-            //($K$40*C28^$J$40)+($L$40+$M$40*C30+$N$40*C30^2)*C28
-            //($K$42*C28^$J$42)+($L$42+$M$42*C30+$N$42*C30^2)*C28
-            //($K$45*C28^$J$45)+($L$45+$M$45*C30+$N$45*C30^2)*C28
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
-            ResponseDataModel variable13 = Utileria.GetVariableByNum(objResp, 13);
+            ResponseDataModel variable22 = Utileria.GetVariableByNum(objResp, 22);
+            ResponseDataModel variable23 = Utileria.GetVariableByNum(objResp, 23);
 
             variable.NoVariable = 24;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -735,15 +735,9 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double a = GetFormulas(objReq.Referencia, 5, "a");
-                double b = GetFormulas(objReq.Referencia, 5, "b");
-                double c = GetFormulas(objReq.Referencia, 5, "c");
-                double d = GetFormulas(objReq.Referencia, 5, "d");
-                double x = GetFormulas(objReq.Referencia, 5, "X");
-
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor13 = variable13.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = (a * Math.Pow(valor11, x)) + (b + c * valor13 + d * Math.Pow(valor13, 2)) * valor11;
+                double valor22 = variable22.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor23 = variable23.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor = valor23 / valor22;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -753,9 +747,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable25(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable24 = Utileria.GetVariableByNum(objResp, 24);
-            ResponseDataModel variable16 = Utileria.GetVariableByNum(objResp, 16);
-
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
 
             variable.NoVariable = 25;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -763,11 +755,10 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor24 = variable24.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor16 = variable16.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
 
-                double valor = (valor24 / valor16)/10;
+                double valor = Utileria.GetTN(valor7);
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -780,17 +771,14 @@ namespace WSOptimizerGallinas.Controllers
         /// </summary>
         /// <param name="objResp"></param>
         /// <param name="objReq"></param>
-        /// <returns>=_xlfn.IFS($C$6=$I$9,(($K$19*C28^$J$19)+($L$19+$M$19*C30+$N$19*C30^2)+$O$19*C30),$C$6=$I$10,(($K$20*C28^$J$20)+($L$20+$M$20*C30+$N$20*C30^2)),$C$6=$I$11,(($K$21*C28^$J$21)+($L$21+$M$21*C30+$N$21*C30^2)),$C$6=$I$12,(($K$22*C28^$J$22)+($L$22+$M$22*C30+$N$22*C30^2)),$C$6=$I$13,(($K$23*C28^$J$23)+($L$23+$M$23*C30+$N$23*C30^2)),$C$6=$I$14,(($K$24*C28^$J$24)+($L$24+$M$24*C30+$N$24*C30^2)))</returns>
+        /// <returns>=_xlfn.IFS($</returns>
         private ResponseDataModel GetVariable26(ResponseModel objResp, RequestModel objReq)
         {
 
-            //(($K$19*C28^$J$19)+($L$19+$M$19*C30+$N$19*C30^2)+$O$19*C30)
-            //(($K$21*C28^$J$21)+($L$21+$M$21*C30+$N$21*C30^2))
-            //(($K$24*C28^$J$24)+($L$24+$M$24*C30+$N$24*C30^2))
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
-            ResponseDataModel variable13 = Utileria.GetVariableByNum(objResp, 13);
-            
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
+
 
             variable.NoVariable = 26;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -798,18 +786,23 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor13 = variable13.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double tc1 = Constantes.TN_CRIANZA;
+                double tc2 = Constantes.TN2_CRIANZA;
+                if (p.Clave == Constantes.ETAPA_BOOSTER)
+                {
+                    tc1 = Constantes.TN_BOOSTER;
+                    tc2 = Constantes.TN2_BOOSTER;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tc1 = Constantes.TN_POSTURA;
+                    tc2 = Constantes.TN2_POSTURA;
+                }
 
-                
-                double a = GetFormulas(objReq.Referencia, 4, "a");
-                double b = GetFormulas(objReq.Referencia, 4, "b");
-                double c = GetFormulas(objReq.Referencia, 4, "c");
-                double d = GetFormulas(objReq.Referencia, 4, "d");
-                double x = GetFormulas(objReq.Referencia, 4, "X");
+                double valor = tc1 * Math.Pow(valor7, tc2) * (valor25 - objReq.Temperatura);
 
-                double valor =  a * Math.Pow (valor11 ,x) + (b + c * valor13 + d*Math.Pow (valor13,2));
-                
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -818,8 +811,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable27(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            ResponseDataModel variable23 = Utileria.GetVariableByNum(objResp, 23);
             ResponseDataModel variable26 = Utileria.GetVariableByNum(objResp, 26);
-            ResponseDataModel variable16 = Utileria.GetVariableByNum(objResp, 16);
 
 
             variable.NoVariable = 27;
@@ -828,9 +821,9 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
+                double valor23 = variable23.Etapas.Find(e => e.Clave == p.Clave).Valor;
                 double valor26 = variable26.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor16 = variable16.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = (valor26 / valor16) / 10;
+                double valor = valor23 + valor26;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -840,8 +833,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable28(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable26 = Utileria.GetVariableByNum(objResp, 26);
             ResponseDataModel variable22 = Utileria.GetVariableByNum(objResp, 22);
+            ResponseDataModel variable27 = Utileria.GetVariableByNum(objResp, 27);
 
 
             variable.NoVariable = 28;
@@ -850,9 +843,9 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor26 = variable26.Etapas.Find(e => e.Clave == p.Clave).Valor;
                 double valor22 = variable22.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor26 * valor22 ;
+                double valor27 = variable27.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor = valor27 / valor22;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -863,8 +856,6 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
             ResponseDataModel variable28 = Utileria.GetVariableByNum(objResp, 28);
-            ResponseDataModel variable16 = Utileria.GetVariableByNum(objResp, 16);
-
 
             variable.NoVariable = 29;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -872,25 +863,24 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                
+
                 double valor28 = variable28.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor16 = variable16.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = (valor28/valor16)/10;
+
+                double valor = (valor28 / (1 - (objReq.DesperdicioCrianza / 100)));
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
             return variable;
         }
 
-        
+
 
         private ResponseDataModel GetVariable30(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
-            
-            //=$L$30 * C28 ^ 2 +$L$31 * C28 +$L$32
-//            0.001, - 0.022, 0.233
+            ResponseDataModel variable4 = Utileria.GetVariableByNum(objResp, 4);
+            ResponseDataModel variable28 = Utileria.GetVariableByNum(objResp, 28);
+            ResponseDataModel variable29 = Utileria.GetVariableByNum(objResp, 29);
 
             variable.NoVariable = 30;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -898,13 +888,16 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                
-                double c1 = GetConstantes( 30, 1);
-                double c2 = GetConstantes( 30, 2);
-                double c3 = GetConstantes( 30, 3);
-                
-                double valor = c1 * Math.Pow(valor11,2) + c2*valor11+c3;
+                double valor4 = variable4.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor28 = variable28.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor29 = variable29.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor4 * valor29;
+                if (p.tipoEtapa > 1)
+                {
+                    valor = valor4 * valor28;
+                }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -914,7 +907,10 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable31(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
+            // comparo variable 2 y variable1        
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
 
             variable.NoVariable = 31;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -922,24 +918,33 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double c1 = GetConstantes( 31, 1);
-                double c2 = GetConstantes(31, 2);
-                double c3 = GetConstantes(31, 3);
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                int tipoValor = Constantes.LISINA_CRIANZA;
+                if (p.tipoEtapa == 2)
+                {
+                    tipoValor = Constantes.LISINA_PREPOSTURA;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tipoValor = Constantes.LISINA_POSTURA;
+                }
 
-                double valor = c1 * Math.Pow(valor11, 2) + c2 * valor11 + c3;
+                double valor = Utileria.GetFormulaDataLisina(dtFor, objReq.Referencia, objReq.EstatusConfort, p.Clave, valor7, valor9, tipoValor, valor17);
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
-            return variable;
             return variable;
         }
 
         private ResponseDataModel GetVariable32(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable11 = Utileria.GetVariableByNum(objResp, 11);
+            ResponseDataModel variable28 = Utileria.GetVariableByNum(objResp, 28);
+            ResponseDataModel variable31 = Utileria.GetVariableByNum(objResp, 31);
 
             variable.NoVariable = 32;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -947,13 +952,10 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor11 = variable11.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor28 = variable28.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor31 = variable31.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double c1 = GetConstantes(32, 1);
-                double c2 = GetConstantes( 32, 2);
-                double c3 = GetConstantes( 32, 3);
-
-                double valor = c1 * Math.Pow(valor11, 2) + c2 * valor11 + c3;
+                double valor = (valor31 / valor28) / 10;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -962,14 +964,24 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable33(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            
+            ResponseDataModel variable21 = Utileria.GetVariableByNum(objResp, 21);
+            ResponseDataModel variable31 = Utileria.GetVariableByNum(objResp, 31);
+
             variable.NoVariable = 33;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 33, p.Clave);
+                double valor = 0;
+                if (p.tipoEtapa == 3 && p.Clave > 6)
+                {
+                    double valor21 = variable21.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    double valor31 = variable31.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                    valor = valor31 - valor21;
+                }
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -980,13 +992,22 @@ namespace WSOptimizerGallinas.Controllers
         {
             ResponseDataModel variable = new();
 
+            ResponseDataModel variable28 = Utileria.GetVariableByNum(objResp, 28);
+            ResponseDataModel variable33 = Utileria.GetVariableByNum(objResp, 33);
+
             variable.NoVariable = 34;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 34, p.Clave);
+                double valor = 0;
+                if (p.tipoEtapa == 3 && p.Clave > 6)
+                {
+                    double valor28 = variable28.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    double valor33 = variable33.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                    valor = (valor33 / valor28) / 10;
+                }
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -995,6 +1016,10 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable35(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            // comparo variable 2 y variable1        
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
 
             variable.NoVariable = 35;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1002,7 +1027,22 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 35, p.Clave);
+
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                int tipoValor = Constantes.PROTEINA_CRIANZA;
+                if (p.tipoEtapa == 2)
+                {
+                    tipoValor = Constantes.PROTEINA_PREPOSTURA;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tipoValor = Constantes.PROTEINA_POSTURA;
+                }
+
+                double valor = Utileria.GetFormulaDataLisina(dtFor, objReq.Referencia, objReq.EstatusConfort, p.Clave, valor7, valor9, tipoValor, valor17);
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1012,6 +1052,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable36(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            ResponseDataModel variable24 = Utileria.GetVariableByNum(objResp, 24);
+            ResponseDataModel variable35 = Utileria.GetVariableByNum(objResp, 35);
 
             variable.NoVariable = 36;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1019,7 +1061,10 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 36, p.Clave);
+                double valor24 = variable24.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor35 = variable35.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = (valor35 / valor24) / 10;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1029,6 +1074,10 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable37(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            // comparo variable 2 y variable1        
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
 
             variable.NoVariable = 37;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1036,7 +1085,22 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 37, p.Clave);
+
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                int tipoValor = Constantes.FOSFORO_CRIANZA;
+                if (p.tipoEtapa == 2)
+                {
+                    tipoValor = Constantes.FOSFORO_PREPOSTURA;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tipoValor = Constantes.FOSFORO_POSTURA;
+                }
+
+                double valor = Utileria.GetFormulaDataLisina(dtFor, objReq.Referencia, objReq.EstatusConfort, p.Clave, valor7, valor9, tipoValor, valor17);
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1046,6 +1110,8 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable38(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
+            ResponseDataModel variable24 = Utileria.GetVariableByNum(objResp, 24);
+            ResponseDataModel variable37 = Utileria.GetVariableByNum(objResp, 37);
 
             variable.NoVariable = 38;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1053,20 +1119,25 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor = GetConstantes( 38, p.Clave);
+                double valor24 = variable24.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor37 = variable37.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = (valor37 / valor24) / 10;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
             return variable;
         }
 
-        
+
 
         private ResponseDataModel GetVariable39(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable33 = Utileria.GetVariableByNum(objResp, 33);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
+            // comparo variable 2 y variable1        
+            ResponseDataModel variable7 = Utileria.GetVariableByNum(objResp, 7);
+            ResponseDataModel variable9 = Utileria.GetVariableByNum(objResp, 9);
+            ResponseDataModel variable17 = Utileria.GetVariableByNum(objResp, 17);
 
             variable.NoVariable = 39;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1074,9 +1145,22 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor33 = variable33.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25* valor33;
+
+                double valor7 = variable7.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor9 = variable9.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor17 = variable17.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                int tipoValor = Constantes.CALCIO_CRIANZA;
+                if (p.tipoEtapa == 2)
+                {
+                    tipoValor = Constantes.CALCIO_PREPOSTURA;
+                }
+                else if (p.tipoEtapa == 3)
+                {
+                    tipoValor = Constantes.CALCIO_POSTURA;
+                }
+
+                double valor = Utileria.GetFormulaDataCalcio(dtFor, objReq.Referencia, objReq.EstatusConfort, p.Clave, valor7, valor9, tipoValor, valor17);
+
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1086,18 +1170,19 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable40(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable34 = Utileria.GetVariableByNum(objResp, 34);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
+            ResponseDataModel variable28 = Utileria.GetVariableByNum(objResp, 28);
+            ResponseDataModel variable39 = Utileria.GetVariableByNum(objResp, 39);
 
-            variable.NoVariable = 40;
+            variable.NoVariable = 41;
             variable.Variable = GetVariable(variable.NoVariable);
             variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor34 = variable34.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25 * valor34;
+                double valor28 = variable28.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor39 = variable39.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = (valor39 / valor28) / 10;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1107,8 +1192,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable41(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable35 = Utileria.GetVariableByNum(objResp, 35);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
+
 
             variable.NoVariable = 41;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1116,20 +1200,15 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor35 = variable35.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25 * valor35;
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
             return variable;
         }
-
         private ResponseDataModel GetVariable42(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable36 = Utileria.GetVariableByNum(objResp, 36);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
 
             variable.NoVariable = 42;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1137,9 +1216,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor36 = variable36.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25 * valor36;
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1149,8 +1226,6 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable43(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable37 = Utileria.GetVariableByNum(objResp, 37);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
 
             variable.NoVariable = 43;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1158,9 +1233,7 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor37 = variable37.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25 * valor37;
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1170,8 +1243,7 @@ namespace WSOptimizerGallinas.Controllers
         private ResponseDataModel GetVariable44(ResponseModel objResp, RequestModel objReq)
         {
             ResponseDataModel variable = new();
-            ResponseDataModel variable38 = Utileria.GetVariableByNum(objResp, 38);
-            ResponseDataModel variable25 = Utileria.GetVariableByNum(objResp, 25);
+
 
             variable.NoVariable = 44;
             variable.Variable = GetVariable(variable.NoVariable);
@@ -1179,9 +1251,191 @@ namespace WSOptimizerGallinas.Controllers
             variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
-                double valor25 = variable25.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor38 = variable38.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double valor = valor25 * valor38;
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+        private ResponseDataModel GetVariable45(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+
+            variable.NoVariable = 45;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable46(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+
+            variable.NoVariable = 46;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable47(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+
+            variable.NoVariable = 47;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable48(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            variable.NoVariable = 48;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor = Utileria.GetConstantes(dtConst, variable.NoVariable, p.Clave);
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable49(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            ResponseDataModel variable32 = Utileria.GetVariableByNum(objResp, 32);
+            ResponseDataModel variable44 = Utileria.GetVariableByNum(objResp, 44);
+
+            variable.NoVariable = 49;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor32 = variable32.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor44 = variable44.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor32 * valor44;
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+        private ResponseDataModel GetVariable50(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            ResponseDataModel variable32 = Utileria.GetVariableByNum(objResp, 32);
+            ResponseDataModel variable45 = Utileria.GetVariableByNum(objResp, 45);
+
+            variable.NoVariable = 50;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor32 = variable32.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor45 = variable45.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor32 * valor45;
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable51(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            ResponseDataModel variable32 = Utileria.GetVariableByNum(objResp, 32);
+            ResponseDataModel variable46 = Utileria.GetVariableByNum(objResp, 46);
+
+            variable.NoVariable = 51;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor32 = variable32.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor46 = variable46.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor32 * valor46;
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable52(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            ResponseDataModel variable32 = Utileria.GetVariableByNum(objResp, 32);
+            ResponseDataModel variable47 = Utileria.GetVariableByNum(objResp, 47);
+
+            variable.NoVariable = 52;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor32 = variable32.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor47 = variable47.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor32 * valor47;
+                return new EtapaResModel(p.Clave, valor);
+            }).ToList();
+
+            return variable;
+        }
+
+        private ResponseDataModel GetVariable53(ResponseModel objResp, RequestModel objReq)
+        {
+            ResponseDataModel variable = new();
+
+            ResponseDataModel variable32 = Utileria.GetVariableByNum(objResp, 32);
+            ResponseDataModel variable48 = Utileria.GetVariableByNum(objResp, 48);
+
+            variable.NoVariable = 53;
+            variable.Variable = GetVariable(variable.NoVariable);
+            variable.Posicion = int.Parse(GetVariable(variable.NoVariable, "Posicion"));
+            variable.MostrarCliente = GetVariable(variable.NoVariable, "MostrarCliente");
+            variable.Etapas = objReq.EtapasModel.Select(p =>
+            {
+                double valor32 = variable32.Etapas.Find(e => e.Clave == p.Clave).Valor;
+                double valor48 = variable48.Etapas.Find(e => e.Clave == p.Clave).Valor;
+
+                double valor = valor32 * valor48;
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();
 
@@ -1205,10 +1459,13 @@ namespace WSOptimizerGallinas.Controllers
 
         private double GetFormulas(int referencia, int v1, string v2)
         {
-            return Utileria.GetFormulas(dtFor, referencia,v1,v2);
+            return Utileria.GetFormulas(dtFor, referencia, v1, v2);
         }
 
-
+        private double GetEdadProdPeso(int referencia, int v1, int v2)
+        {
+            return Utileria.GetEdadProdPeso(dtFor, referencia, v1, v2);
+        }
     }
 
 }

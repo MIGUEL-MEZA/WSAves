@@ -217,20 +217,21 @@ namespace WSOptimizerGallinas.Controllers
                             }
 
                             duracionRestante = objReqDataIni.Productos.FindAll(t => t.CveProducto >= 4).Sum(t => t.DuracionMax);
-                            
+
                             if ((int)(duracionRestante + durEtap3) < (int)objReqDataIni.EdadVenta)
                             {
                                 break;
                             }
                             List<double> pesoArray5 = GetArrPesoEtapa(peso4, 5, objReqDataIni, durEtap4);
-                            if (pesoArray5==null) {
+                            if (pesoArray5 == null)
+                            {
                                 break;
                             }
                             foreach (double peso5 in pesoArray5)
                             {
                                 objReqDataIni.PesoInicialTmp = peso4;
                                 prod = objReqDataIni.Productos.Find(r => r.Posicion == 5);
-                                if ((int)(Math.Round(prod.DuracionMax + durEtap4,0)) < (int)objReqDataIni.EdadVenta)
+                                if ((int)(Math.Round(prod.DuracionMax + durEtap4, 0)) < (int)objReqDataIni.EdadVenta)
                                 {
                                     break;
                                 }
@@ -258,7 +259,8 @@ namespace WSOptimizerGallinas.Controllers
 
 
                                 }
-                                else {
+                                else
+                                {
                                     string entra = "aui";
                                 }
 
@@ -330,23 +332,26 @@ namespace WSOptimizerGallinas.Controllers
         {
             objReqDataIni.IsOptimizar = true;
             objReqDataIni.PesoInicialTmp = iniPeso;
-            ProductoModel prod=objReqDataIni.Productos.Find(r => r.Posicion == identificador);
-            double duraRestanteMax=objReqDataIni.Productos.FindAll(t => t.CveProducto >= identificador ).Sum(t => t.DuracionMax);
+            ProductoModel prod = objReqDataIni.Productos.Find(r => r.Posicion == identificador);
+            double duraRestanteMax = objReqDataIni.Productos.FindAll(t => t.CveProducto >= identificador).Sum(t => t.DuracionMax);
             double duraRestanteMin = objReqDataIni.Productos.FindAll(t => t.CveProducto >= identificador).Sum(t => t.DuracionMin);
             List<double> pesoArray = new List<double>();
 
-            double duracionTope = (int) Math.Round(objReqDataIni.EdadVenta - duracionAnterior,0);
-            double duracionTopeIni = (int)Math.Round(objReqDataIni.EdadVenta - duracionAnterior, 0)- objReqDataIni.Productos.FindAll(t => t.CveProducto > identificador).Sum(t => t.DuracionMax); 
-            if (identificador==5 &&  prod.DuracionMax < duracionTope) {
+            double duracionTope = (int)Math.Round(objReqDataIni.EdadVenta - duracionAnterior, 0);
+            double duracionTopeIni = (int)Math.Round(objReqDataIni.EdadVenta - duracionAnterior, 0) - objReqDataIni.Productos.FindAll(t => t.CveProducto > identificador).Sum(t => t.DuracionMax);
+            if (identificador == 5 && prod.DuracionMax < duracionTope)
+            {
                 return pesoArray;
             }
-            if (duraRestanteMax < duracionTope) {
+            if (duraRestanteMax < duracionTope)
+            {
                 return pesoArray;
             }
-            
-            double duraIni = prod.DuracionMin< duracionTopeIni? duracionTopeIni:prod.DuracionMin ;
-            double duraFin = prod.DuracionMax>duracionTope ?duracionTope:prod.DuracionMax ;
-            if (identificador == 5) {
+
+            double duraIni = prod.DuracionMin < duracionTopeIni ? duracionTopeIni : prod.DuracionMin;
+            double duraFin = prod.DuracionMax > duracionTope ? duracionTope : prod.DuracionMax;
+            if (identificador == 5)
+            {
                 duraIni = duracionTope;
             }
 
@@ -481,7 +486,8 @@ namespace WSOptimizerGallinas.Controllers
                         valPresupuesto = presupuestoEtapa.Valor;
                     }
                     strSQLParam += ",'" + valPresupuesto + "'";
-                };
+                }
+                ;
 
                 strSQLParam += ") ";
 
@@ -633,7 +639,7 @@ namespace WSOptimizerGallinas.Controllers
             registro.Peso_Inicial = GetPeso_Inicial(Identificador);
             registro.Peso_Medio = promedio;
 
-            registro.SIDLysGDP = Utileria.GetLisinaGDP(dtFor, objReq.CveReferencia, promedio);
+            //registro.SIDLysGDP = Utileria.GetLisinaGDP(dtFor, objReq.CveReferencia, promedio);
             registro.ConsumoDiario = GetConsumoEstimado(Identificador, promedio);
             registro.AlimentoOfrecer = GetAlimentoOfrecer(Identificador, promedio);
             registro.PresupuestoAlimento = GetPresupuestoAlimento(Identificador, promedio, duracionObjetivo);
@@ -656,7 +662,8 @@ namespace WSOptimizerGallinas.Controllers
         {
 
             ProductoModel prod = objReq.Productos.Find(p => p.CveProducto == Identificador);
-            return Utileria.GetEnergiaMetabolizante(dtFor, objReq.CveReferencia, promedio, GetGDPEcuacion(Identificador, promedio));
+            return 0;
+            // return Utileria.GetEnergiaMetabolizante(dtFor, objReq.CveReferencia, promedio, GetGDPEcuacion(Identificador, promedio));
 
         }
 
@@ -706,7 +713,7 @@ namespace WSOptimizerGallinas.Controllers
         public double GetLisinaGDP(int Identificador, double promedio)
         {
             ProductoModel prod = objReq.Productos.Find(p => p.CveProducto == Identificador);
-            return Utileria.GetLisinaGDP(dtFor, objReq.CveReferencia, promedio);
+            return 0;//return Utileria.GetLisinaGDP(dtFor, objReq.CveReferencia, promedio);
         }
 
         public double GetConsumoEstimado(int Identificador, double promedio)
@@ -746,7 +753,7 @@ namespace WSOptimizerGallinas.Controllers
         {
             //=((P14*10)*M14)/L14
             ProductoModel prod = objReq.Productos.Find(p => p.CveProducto == Identificador);
-            return Utileria.GetGananciaDP(dtFor, objReq.CveReferencia, promedio);
+            return 0;//return Utileria.GetGananciaDP(dtFor, objReq.CveReferencia, promedio);
         }
 
         public double GetGDPUtilizar(int Identificador, double promedio)
