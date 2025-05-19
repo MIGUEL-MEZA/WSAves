@@ -11,7 +11,8 @@
 
         public double Temperatura { get; set; }
         public double Humedad { get; set; }
-        public double Desperdicio { get; set; }
+        public double DesperdicioCrianza { get; set; }
+        public string EstatusConfort { get; set; }
         public List<EtapaModel> EtapasModel { get; set; }
     }
 
