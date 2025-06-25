@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Converters;
+using WSOptimizerGallinas.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // newton
-builder.Services.AddControllers().AddNewtonsoftJson(options =>
-        options.SerializerSettings.Converters.Add(new StringEnumConverter()));
+builder.Services.AddControllers().AddNewtonsoftJson(options => {
+    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+    //options.SerializerSettings.Converters.Add(new DoubleToStringConverter());
+});
+
 
 // order is vital, this *must* be called *after* AddNewtonsoftJson()
 builder.Services.AddSwaggerGenNewtonsoftSupport();

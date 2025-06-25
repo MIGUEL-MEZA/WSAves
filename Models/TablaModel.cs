@@ -3,30 +3,22 @@
     public class TablaModel
     {
         public int Identificador { get; set; }
-        public double EM_Alimento { get; set; }
-        public double Req_EM { get; set; }
         public double Costo { get; set; }
-        public double Duracion_Etapa { get; set; }
-        public double Duracion_Minima { get; set; }
-        public double Duracion_Maxima { get; set; }
+        public double EdadInicial { get; set; }
+        public double EdadFinal { get; set; }
+        public double Semanas { get; set; }
+        public double Dias { get; set; }
+        public double Mortalidad { get; set; }
 
-        public double Peso_Inicial { get; set; }
-        public double Peso_Final { get; set; }
-        public double Peso_Medio { get; set; }
-        public double SIDLysGDP { get; set; } 
+        public double NoAves { get; set; }
+        public double ConsumoAlimento { get; set; }
+        public double ConsumoAlimentoTotal { get; set; }
+        public double PesoHuevo { get; set; } 
 
-        public double ConsumoDiario { get; set; }
-        public double AlimentoOfrecer { get; set; }
-        public double PresupuestoAlimento { get; set; }
-        
-        public double Lisina { get; set; }
-        public double GDPNutrientes { get; set; }
-        public double GDPEcuacion { get; set; }
-        public double GDPUtilizar { get; set; }
-        public double CA { get; set; }
-        
-        public double Edad_Inicial { get; set; }
-        public double Edad_Final { get; set; }
+        public double Produccion { get; set; }
+        public double MasaHuevo { get; set; }
+        public double ConversionAlimenticia { get; set; }
+        public double HuevoProducido { get; set; }
         
     }
 

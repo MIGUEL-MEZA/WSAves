@@ -39,6 +39,14 @@
         public const double TN2_POSTURA = 0.7;
 
         public const int ETAPA_BOOSTER = 6;
+
+        public const double JAULA_CRIANZA = 1.0;
+        public const double JAULA_POSTURA = 1.0;
+        public const double PISO_CRIANZA = 1.01;
+        public const double PISO_POSTURA = 1.01;
+        public const double AVIARIO_CRIANZA = 1.02;
+        public const double AVIARIO_POSTURA = 1.03;
+
     }
 
 }
