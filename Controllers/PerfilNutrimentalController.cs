@@ -130,10 +130,10 @@ namespace WSOptimizerGallinas.Controllers
             string strSQLParam = "DELETE OptimizerG_PerfilN_Resultado WHERE CvePerfilN =" + objReq.CvePerfilN.ToString() + "";
             Database.execNonQuery(strSQLParam);
 
-            strSQLParam = "INSERT INTO OptimizerG_PerfilN_Resultado(CvePerfilN,Request,Response,FecAct,UsuAct) ";
+            strSQLParam = "INSERT INTO OptimizerG_PerfilN_Resultado(CvePerfilN,Request,Response,Response2,FecAct,UsuAct) ";
             string jsonResp = JsonConvert.SerializeObject(objResp);
             string jsonReq = JsonConvert.SerializeObject(objReq);
-            strSQLParam += "VALUES(" + objReq.CvePerfilN.ToString() + ",'" + jsonReq + "','" + jsonResp + "',GETDATE(),'" + objReq.UsuAct + "') ";
+            strSQLParam += "VALUES(" + objReq.CvePerfilN.ToString() + ",'" + jsonReq + "','" + jsonResp + "','" + jsonResp + "',GETDATE(),'" + objReq.UsuAct + "') ";
             Database.execNonQuery(strSQLParam);
         }
 
@@ -233,9 +233,9 @@ namespace WSOptimizerGallinas.Controllers
                 double valor = 0;
                 double valor2 = variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double a = GetFormulas(objReq.Referencia, 1, "a");
-                double b = GetFormulas(objReq.Referencia, 1, "b");
-                double c = GetFormulas(objReq.Referencia, 1, "c");
+                double a = GetFormulas(objReq.Referencia, 1, "a" + p.etapaAlimento.ToString());
+                double b = GetFormulas(objReq.Referencia, 1, "b" + p.etapaAlimento.ToString());
+                double c = GetFormulas(objReq.Referencia, 1, "c" + p.etapaAlimento.ToString());
 
                 valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
 
@@ -263,9 +263,11 @@ namespace WSOptimizerGallinas.Controllers
             {
                 double valor = 0;
                 double valor2 = variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
-                double a = GetFormulas(objReq.Referencia, 1, "a");
-                double b = GetFormulas(objReq.Referencia, 1, "b");
-                double c = GetFormulas(objReq.Referencia, 1, "c");
+
+                double a = GetFormulas(objReq.Referencia, 1, "a" + p.etapaAlimento.ToString());
+                double b = GetFormulas(objReq.Referencia, 1, "b" + p.etapaAlimento.ToString());
+                double c = GetFormulas(objReq.Referencia, 1, "c" + p.etapaAlimento.ToString());
+
 
                 valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
 
@@ -772,20 +774,21 @@ namespace WSOptimizerGallinas.Controllers
             variable.Etapas = objReq.EtapasModel.Select(p =>
             {
                 double valor = p.EMAlimento;
-                double factor = 0;
+                double factor = 1;
                 if (objReq.TipoInstalaciones == "PISO")
                 {
-                    factor = (p.tipoEtapa > 1) ? Constantes.PISO_CRIANZA : Constantes.PISO_POSTURA;
-                }else if (objReq.TipoInstalaciones == "AVIARIO")
+                    factor = (p.tipoEtapa > 1) ? Constantes.PISO_POSTURA: Constantes.PISO_CRIANZA;
+                }
+                else if (objReq.TipoInstalaciones == "AVIARIO")
                 {
-                    factor = (p.tipoEtapa > 1) ? Constantes.AVIARIO_CRIANZA : Constantes.AVIARIO_POSTURA;
+                    factor = (p.tipoEtapa > 1) ? Constantes.AVIARIO_POSTURA : Constantes.AVIARIO_CRIANZA;
                 }
                 else
                 {
-                    factor = (p.tipoEtapa > 1) ? Constantes.JAULA_CRIANZA : Constantes.JAULA_POSTURA;
+                    factor = (p.tipoEtapa > 1) ? Constantes.JAULA_POSTURA : Constantes.JAULA_CRIANZA;
                 }
 
-                  return new EtapaResModel(p.Clave, valor);
+                  return new EtapaResModel(p.Clave, valor*factor);
             }).ToList();
 
             return variable;

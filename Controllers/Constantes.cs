@@ -23,12 +23,16 @@
         public const int PROTEINA_PREPOSTURA = 15;
         public const int PROTEINA_POSTURA = 16;
 
-        public const double TN_A = -7.39246100608363;
-        public const double TN_B = 45.1200259298986;
-        public const double TN_C = -103.089875424204;
-        public const double TN_D = 108.439369021931;
-        public const double TN_E = -52.4557519790621;
-        public const double TN_F = 34.3759477915895;
+        public const double TN_A = -5.15855582852433;
+        public const double TN_B = 71.556245714221;
+        public const double TN_C = -121.671199254602;
+        public const double TN_D = 159.214869193782;
+        public const double TN_E = -115.225847474847;
+        public const double TN_F = 34.5208355007645;
+        public const double TN_G = 4.33924646045395;
+        public const double TN_H = 3.04784226789575;
+        public const double TN_I = 2.49728541447086;
+        public const double TN_J = 1.39163662295187;
 
         public const double TN_CRIANZA = 2.6;
         public const double TN_BOOSTER = 2;
@@ -42,10 +46,10 @@
 
         public const double JAULA_CRIANZA = 1.0;
         public const double JAULA_POSTURA = 1.0;
-        public const double PISO_CRIANZA = 1.01;
+        public const double PISO_CRIANZA = 1.008;
         public const double PISO_POSTURA = 1.01;
-        public const double AVIARIO_CRIANZA = 1.02;
-        public const double AVIARIO_POSTURA = 1.03;
+        public const double AVIARIO_CRIANZA = 1.014;
+        public const double AVIARIO_POSTURA = 1.018;
 
     }
 
