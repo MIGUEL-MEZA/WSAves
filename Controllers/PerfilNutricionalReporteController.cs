@@ -73,7 +73,15 @@ namespace WSOptimizerGallinas.Controllers
 
             int version = NormalizeVersionReporte(versionReporte);
 
-            string sqlPerfil = @"SELECT OPNR.*, OPN.*, C.*, C.NomClienteA AS NomClienteReporte FROM OptimizerG_PerfilN_Resultado OPNR
+            string sqlPerfil = @"SELECT OPNR.*, OPN.*, C.*,
+CASE
+    WHEN ISNULL(LTRIM(RTRIM(C.NomClienteA)), '') = '' THEN ISNULL(C.NomCliente, '')
+    WHEN ISNULL(LTRIM(RTRIM(C.NomCliente)), '') = '' THEN C.NomClienteA
+    WHEN UPPER(LTRIM(RTRIM(C.NomClienteA))) = UPPER(LTRIM(RTRIM(C.NomCliente))) THEN C.NomClienteA
+    ELSE C.NomClienteA + ' (' + C.NomCliente + ')'
+END AS NomClientePerfil,
+C.NomClienteA AS NomClienteReporte
+FROM OptimizerG_PerfilN_Resultado OPNR
 INNER JOIN OptimizerG_PerfilN OPN ON OPNR.CvePerfilN = OPN.CvePerfilN
 INNER JOIN Clientes C ON OPN.CodCliente = C.CodCliente
 WHERE OPNR.CvePerfilN = " + id;
@@ -136,7 +144,7 @@ WHERE OPNR.CvePerfilN = " + id;
             return new ReportePerfilModel
             {
                 CvePerfilN = id,
-                Cliente = row["NomClienteReporte"]?.ToString() ?? row["NomClienteA"]?.ToString() ?? "",
+                Cliente = GetClienteReporte(row),
                 Referencia = referencia,
                 FechaEmision = DateTime.Now,
                 Columnas = columnas,
@@ -152,6 +160,45 @@ WHERE OPNR.CvePerfilN = " + id;
                 return cveReferencia.ToString();
 
             return dtReferencia.Rows[0]["NomReferencia"]?.ToString() ?? cveReferencia.ToString();
+        }
+
+        private string GetClienteReporte(DataRow row)
+        {
+            string nombrePerfil = row.Table.Columns.Contains("NomClientePerfil")
+                ? (row["NomClientePerfil"]?.ToString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(nombrePerfil))
+                return nombrePerfil;
+
+            string alias = row.Table.Columns.Contains("NomClienteReporte")
+                ? (row["NomClienteReporte"]?.ToString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            string nombreAlterno = row.Table.Columns.Contains("NomClienteA")
+                ? (row["NomClienteA"]?.ToString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            string razonSocial = row.Table.Columns.Contains("NomCliente")
+                ? (row["NomCliente"]?.ToString() ?? string.Empty).Trim()
+                : string.Empty;
+
+            string nombreCorto = new[] { alias, nombreAlterno }
+                .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(nombreCorto) && string.IsNullOrWhiteSpace(razonSocial))
+                return string.Empty;
+
+            if (string.IsNullOrWhiteSpace(razonSocial))
+                return nombreCorto;
+
+            if (string.IsNullOrWhiteSpace(nombreCorto))
+                return razonSocial;
+
+            if (string.Equals(nombreCorto, razonSocial, StringComparison.OrdinalIgnoreCase))
+                return nombreCorto;
+
+            return $"{nombreCorto} ({razonSocial})";
         }
 
         private Dictionary<int, VariableReporteConfig> GetVariablesCatalogo()
@@ -286,8 +333,11 @@ WHERE OPNR.CvePerfilN = " + id;
             worksheet.Cell("C1").Style.Alignment.WrapText = true;
             worksheet.Cell("E1").Style.Alignment.WrapText = true;
             worksheet.Cell("G1").Style.Alignment.WrapText = true;
+            worksheet.Cell("C1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            worksheet.Cell("E1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            worksheet.Cell("G1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            worksheet.Row(1).Height = Math.Max(worksheet.Row(1).Height, 42d);
         }
-
         private void FillExcelColumns(IXLWorksheet worksheet, ReportePerfilModel reporte)
         {
             worksheet.Cell(ExcelHeaderRow, 1).Value = "ETAPA";
