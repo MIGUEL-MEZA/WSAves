@@ -18,6 +18,10 @@ namespace WSOptimizerGallinas.Controllers
         private const int ExcelHeaderRow = 3;
         private const int ExcelBodyStartRow = 4;
         private const int ExcelTemplateBodyEndRow = 20;
+        private static readonly XLColor ExcelDarkBlue = XLColor.FromHtml("#0b2e57");
+        private static readonly XLColor ExcelLightBlue = XLColor.FromHtml("#6084d7");
+        private static readonly XLColor ExcelGridBlue = XLColor.FromHtml("#d6deed");
+        private static readonly XLColor ExcelRowHeaderBlue = XLColor.FromHtml("#eef2f8");
 
         private readonly IConfiguration configuration;
         private readonly IWebHostEnvironment env;
@@ -106,7 +110,7 @@ WHERE OPNR.CvePerfilN = " + id;
                 ?? throw new Exception("No fue posible leer el Response del perfil.");
 
             string referencia = GetNomReferencia(request.Referencia);
-            Dictionary<int, string> etapas = GetEtapasCatalogo();
+            Dictionary<int, string> etapas = GetEtapasCatalogo(id);
             Dictionary<int, VariableReporteConfig> variablesCatalogo = GetVariablesCatalogo();
             List<ResponseDataModel> variablesVisibles = response.Variables
                 .Where(v => variablesCatalogo.TryGetValue(v.NoVariable, out VariableReporteConfig? config)
@@ -221,16 +225,35 @@ WHERE OPNR.CvePerfilN = " + id;
                 });
         }
 
-        private Dictionary<int, string> GetEtapasCatalogo()
+        private Dictionary<int, string> GetEtapasCatalogo(long cvePerfilN)
         {
-            string sql = "SELECT * FROM CatOptimizerG_Etapas";
-            DataTable dtEtapas = Database.execQuery(sql);
-            if (dtEtapas == null || dtEtapas.Rows.Count == 0)
+            string sqlCatalogo = "SELECT * FROM CatOptimizerG_Etapas";
+            DataTable dtEtapasCatalogo = Database.execQuery(sqlCatalogo);
+            if (dtEtapasCatalogo == null || dtEtapasCatalogo.Rows.Count == 0)
                 throw new Exception("No se encontro el catalogo de etapas.");
 
-            return dtEtapas.AsEnumerable().ToDictionary(
+            Dictionary<int, string> etapas = dtEtapasCatalogo.AsEnumerable().ToDictionary(
                 row => Convert.ToInt32(row["CveEtapa"]),
                 row => row["NomEtapa"]?.ToString() ?? string.Empty);
+
+            string sqlPerfil = $"SELECT * FROM OptimizerG_PerfilN_Etapas WHERE CvePerfilN = {cvePerfilN}";
+            DataTable dtEtapasPerfil = Database.execQuery(sqlPerfil);
+
+            if (dtEtapasPerfil == null || dtEtapasPerfil.Rows.Count == 0)
+                return etapas;
+
+            foreach (DataRow row in dtEtapasPerfil.Rows)
+            {
+                int cveEtapa = Convert.ToInt32(row["CveEtapa"]);
+                string nomEtapa = row["NomEtapa"]?.ToString()?.Trim() ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(nomEtapa))
+                    continue;
+
+                etapas[cveEtapa] = nomEtapa;
+            }
+
+            return etapas;
         }
 
         private byte[] GenerateExcelBytes(ReportePerfilModel reporte)
@@ -324,33 +347,54 @@ WHERE OPNR.CvePerfilN = " + id;
 
         private void FillExcelHeader(IXLWorksheet worksheet, ReportePerfilModel reporte)
         {
+            int lastColumn = Math.Max(reporte.Columnas.Count + 1, 7);
+
+            UnmergeHeaderRangeIfNeeded(worksheet, 1, 1, 2);
+            UnmergeHeaderRangeIfNeeded(worksheet, 1, 3, 4);
+            UnmergeHeaderRangeIfNeeded(worksheet, 1, 5, 6);
+            UnmergeHeaderRangeIfNeeded(worksheet, 1, 7, lastColumn);
+
+            worksheet.Range(1, 1, 1, 2).Merge();
+            worksheet.Range(1, 3, 1, 4).Merge();
+            worksheet.Range(1, 5, 1, 6).Merge();
+            worksheet.Range(1, 7, 1, lastColumn).Merge();
+
             worksheet.Cell("A1").Value = "PERFIL NUTRICIONAL";
             worksheet.Cell("C1").Value = $"CLIENTE{Environment.NewLine}{reporte.Cliente}";
             worksheet.Cell("E1").Value = $"REFERENCIA{Environment.NewLine}{reporte.Referencia}";
             worksheet.Cell("G1").Value = $"FECHA EMISION:{Environment.NewLine}{reporte.FechaEmision:dd/MM/yyyy}";
 
-            worksheet.Cell("A1").Style.Alignment.WrapText = true;
-            worksheet.Cell("C1").Style.Alignment.WrapText = true;
-            worksheet.Cell("E1").Style.Alignment.WrapText = true;
-            worksheet.Cell("G1").Style.Alignment.WrapText = true;
-            worksheet.Cell("C1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-            worksheet.Cell("E1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
-            worksheet.Cell("G1").Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            ApplyTopHeaderStyle(worksheet.Range(1, 1, 1, 2), true);
+            ApplyTopHeaderStyle(worksheet.Range(1, 3, 1, 4), false);
+            ApplyTopHeaderStyle(worksheet.Range(1, 5, 1, 6), false);
+            ApplyTopHeaderStyle(worksheet.Range(1, 7, 1, lastColumn), false);
+
             worksheet.Row(1).Height = Math.Max(worksheet.Row(1).Height, 42d);
         }
         private void FillExcelColumns(IXLWorksheet worksheet, ReportePerfilModel reporte)
         {
             worksheet.Cell(ExcelHeaderRow, 1).Value = "ETAPA";
 
-            int existingColumnCount = Math.Max(reporte.Columnas.Count + 1, 7);
-            for (int columnIndex = 2; columnIndex <= existingColumnCount; columnIndex++)
+            int lastColumn = Math.Max(reporte.Columnas.Count + 1, 7);
+            for (int columnIndex = 2; columnIndex <= lastColumn; columnIndex++)
             {
                 worksheet.Cell(ExcelHeaderRow, columnIndex).Clear(XLClearOptions.Contents);
             }
 
+            ApplyStageHeaderStyle(worksheet.Cell(ExcelHeaderRow, 1), ExcelDarkBlue);
+
             for (int index = 0; index < reporte.Columnas.Count; index++)
             {
-                worksheet.Cell(ExcelHeaderRow, index + 2).Value = reporte.Columnas[index].Nombre;
+                int columnIndex = index + 2;
+                worksheet.Cell(ExcelHeaderRow, columnIndex).Value = reporte.Columnas[index].Nombre;
+                ApplyStageHeaderStyle(
+                    worksheet.Cell(ExcelHeaderRow, columnIndex),
+                    index % 2 == 0 ? ExcelLightBlue : ExcelDarkBlue);
+            }
+
+            for (int columnIndex = reporte.Columnas.Count + 2; columnIndex <= lastColumn; columnIndex++)
+            {
+                ApplyStageHeaderStyle(worksheet.Cell(ExcelHeaderRow, columnIndex), ExcelDarkBlue);
             }
         }
 
@@ -373,10 +417,18 @@ WHERE OPNR.CvePerfilN = " + id;
                 ReporteFilaModel fila = reporte.Filas[rowOffset];
                 int rowIndex = ExcelBodyStartRow + rowOffset;
                 worksheet.Cell(rowIndex, 1).Value = fila.Variable;
+                ApplyRowHeaderStyle(worksheet.Cell(rowIndex, 1));
 
                 for (int columnOffset = 0; columnOffset < fila.Valores.Count; columnOffset++)
                 {
-                    worksheet.Cell(rowIndex, columnOffset + 2).Value = FormatCellValue(fila.Valores[columnOffset].Valor);
+                    int columnIndex = columnOffset + 2;
+                    worksheet.Cell(rowIndex, columnIndex).Value = FormatCellValue(fila.Valores[columnOffset].Valor);
+                    ApplyBodyCellStyle(worksheet.Cell(rowIndex, columnIndex));
+                }
+
+                for (int columnIndex = fila.Valores.Count + 2; columnIndex <= lastColumn; columnIndex++)
+                {
+                    ApplyBodyCellStyle(worksheet.Cell(rowIndex, columnIndex));
                 }
             }
         }
@@ -403,6 +455,65 @@ WHERE OPNR.CvePerfilN = " + id;
             }
         }
 
+        private static void ApplyTopHeaderStyle(IXLRange range, bool titleCell)
+        {
+            range.Style.Fill.BackgroundColor = titleCell ? ExcelDarkBlue : XLColor.White;
+            range.Style.Font.FontColor = titleCell ? XLColor.White : XLColor.FromHtml("#2d4998");
+            range.Style.Font.Bold = true;
+            range.Style.Alignment.WrapText = true;
+            range.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            range.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.OutsideBorderColor = ExcelGridBlue;
+            range.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            range.Style.Border.InsideBorderColor = ExcelGridBlue;
+        }
+
+        private static void ApplyStageHeaderStyle(IXLCell cell, XLColor backgroundColor)
+        {
+            cell.Style.Fill.BackgroundColor = backgroundColor;
+            cell.Style.Font.FontColor = XLColor.White;
+            cell.Style.Font.Bold = false;
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            cell.Style.Border.OutsideBorderColor = XLColor.White;
+            cell.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+            cell.Style.Border.InsideBorderColor = XLColor.White;
+        }
+
+        private static void ApplyRowHeaderStyle(IXLCell cell)
+        {
+            cell.Style.Fill.BackgroundColor = ExcelRowHeaderBlue;
+            cell.Style.Font.Bold = true;
+            cell.Style.Font.FontColor = XLColor.FromHtml("#111827");
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            cell.Style.Border.OutsideBorderColor = ExcelGridBlue;
+        }
+
+        private static void ApplyBodyCellStyle(IXLCell cell)
+        {
+            cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            cell.Style.Alignment.Vertical = XLAlignmentVerticalValues.Center;
+            cell.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            cell.Style.Border.OutsideBorderColor = ExcelGridBlue;
+        }
+
+        private static void UnmergeHeaderRangeIfNeeded(IXLWorksheet worksheet, int row, int startColumn, int endColumn)
+        {
+            foreach (IXLRange mergedRange in worksheet.MergedRanges
+                .Where(range => range.FirstRow().RowNumber() == row
+                    && range.LastRow().RowNumber() == row
+                    && range.FirstColumn().ColumnNumber() >= startColumn
+                    && range.LastColumn().ColumnNumber() <= endColumn)
+                .ToList())
+            {
+                mergedRange.Unmerge();
+            }
+        }
+
         private string BuildHeaderHtml(ReportePerfilModel reporte)
         {
             return GetTemplate("perfil_nutricional_header.html")
@@ -412,17 +523,8 @@ WHERE OPNR.CvePerfilN = " + id;
         private string BuildBodyHtml(ReportePerfilModel reporte)
         {
             string template = GetTemplate("perfil_nutricional_body.html");
-            string[] stageColors =
-            {
-                "#6084d7",
-                "#2d4998",
-                "#6f8fe4",
-                "#2c458e",
-                "#6b88df",
-                "#27418b"
-            };
             string columnHeaders = string.Join(Environment.NewLine, reporte.Columnas.Select(columna =>
-                $"<td style=\"border: solid 1px #cbd5e1; padding: 2px 6px; background-color:{stageColors[Math.Min(reporte.Columnas.IndexOf(columna), stageColors.Length - 1)]};\" align=\"center\">" +
+                $"<td style=\"border: solid 1px #cbd5e1; padding: 2px 6px; background-color:{GetStageHeaderHtmlColor(reporte.Columnas.IndexOf(columna))};\" align=\"center\">" +
                 $"<Label style=\"font-family:Helvetica;font-size:8pt;font-weight:normal;color:#ffffff;\">{EscapeHtml(columna.Nombre)}</Label>" +
                 "</td>"));
             string rows = string.Join(Environment.NewLine, reporte.Filas.OrderBy(f => f.Posicion).Select(fila =>
@@ -445,6 +547,11 @@ WHERE OPNR.CvePerfilN = " + id;
                 .Replace("@@TableRows", rows);
             
             
+        }
+
+        private static string GetStageHeaderHtmlColor(int index)
+        {
+            return index % 2 == 0 ? "#6084d7" : "#2d4998";
         }
 
         private string BuildFooterHtml()
