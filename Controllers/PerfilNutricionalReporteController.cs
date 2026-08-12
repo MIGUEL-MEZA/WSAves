@@ -134,44 +134,78 @@ WHERE OPNR.CvePerfilN = " + id;
                 })
                 .ToList();
 
-            List<ReporteCategoriaModel> categorias = variablesVisibles
-                .GroupBy(variable =>
+            List<ReporteCategoriaModel> categorias;
+
+            // Si la version de reporte es 3, construir una unica categoria sin nombre
+            // que contenga todas las variables (sin agrupar por categorias)
+            if (version == 3)
+            {
+                categorias = new List<ReporteCategoriaModel>
                 {
-                    VariableReporteConfig config = variablesCatalogo[variable.NoVariable];
-                    return new
+                    new ReporteCategoriaModel
                     {
-                        SinCategoria = config.CveCategoria == null || string.IsNullOrWhiteSpace(config.NomCategoria),
-                        config.CveCategoria,
-                        config.PosicionCategoria,
-                        Nombre = string.IsNullOrWhiteSpace(config.NomCategoria) ? string.Empty : config.NomCategoria!.Trim()
-                    };
-                })
-                 .OrderBy(group => group.Key.SinCategoria ? 0 : 1)
-                .ThenBy(group => group.Key.PosicionCategoria ?? int.MaxValue)
-                .ThenBy(group => group.Key.CveCategoria)
-                .ThenBy(group => group.Min(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion))
-                .Select(group => new ReporteCategoriaModel
-                {
-                    SinCategoria = group.Key.SinCategoria,
-                    CveCategoria = group.Key.CveCategoria ?? 0,
-                    Nombre = group.Key.Nombre,
-                    Posicion = group.Key.PosicionCategoria ?? group.Min(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion),
-                    Filas = group
-                        .OrderBy(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion)
-                        .Select(variable => new ReporteFilaModel
-                        {
-                            Variable = variablesCatalogo[variable.NoVariable].NomVariable ?? variable.Variable,
-                            Posicion = variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion,
-                            Decimales = variablesCatalogo[variable.NoVariable].Decimales,
-                            Valores = columnas.Select(columna => new ReporteCeldaModel
+                        SinCategoria = true,
+                        CveCategoria = 0,
+                        Nombre = string.Empty,
+                        Posicion = 0,
+                        Filas = variablesVisibles
+                            .OrderBy(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion)
+                            .Select(variable => new ReporteFilaModel
                             {
-                                ClaveEtapa = columna.Clave,
-                                Valor = variable.Etapas.FirstOrDefault(e => e.Clave == columna.Clave)?.Valor
-                            }).ToList()
-                        })
-                        .ToList()
-                })
-                .ToList();
+                                Variable = variablesCatalogo[variable.NoVariable].NomVariable ?? variable.Variable,
+                                Posicion = variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion,
+                                Decimales = variablesCatalogo[variable.NoVariable].Decimales,
+                                Valores = columnas.Select(columna => new ReporteCeldaModel
+                                {
+                                    ClaveEtapa = columna.Clave,
+                                    Valor = variable.Etapas.FirstOrDefault(e => e.Clave == columna.Clave)?.Valor
+                                }).ToList()
+                            })
+                            .ToList()
+                    }
+                };
+            }
+            else
+            {
+                categorias = variablesVisibles
+                    .GroupBy(variable =>
+                    {
+                        VariableReporteConfig config = variablesCatalogo[variable.NoVariable];
+                        return new
+                        {
+                            SinCategoria = config.CveCategoria == null || string.IsNullOrWhiteSpace(config.NomCategoria),
+                            config.CveCategoria,
+                            config.PosicionCategoria,
+                            Nombre = string.IsNullOrWhiteSpace(config.NomCategoria) ? string.Empty : config.NomCategoria!.Trim()
+                        };
+                    })
+                     .OrderBy(group => group.Key.SinCategoria ? 0 : 1)
+                    .ThenBy(group => group.Key.PosicionCategoria ?? int.MaxValue)
+                    .ThenBy(group => group.Key.CveCategoria)
+                    .ThenBy(group => group.Min(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion))
+                    .Select(group => new ReporteCategoriaModel
+                    {
+                        SinCategoria = group.Key.SinCategoria,
+                        CveCategoria = group.Key.CveCategoria ?? 0,
+                        Nombre = group.Key.Nombre,
+                        Posicion = group.Key.PosicionCategoria ?? group.Min(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion),
+                        Filas = group
+                            .OrderBy(variable => variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion)
+                            .Select(variable => new ReporteFilaModel
+                            {
+                                Variable = variablesCatalogo[variable.NoVariable].NomVariable ?? variable.Variable,
+                                Posicion = variablesCatalogo[variable.NoVariable].Posicion ?? variable.Posicion,
+                                Decimales = variablesCatalogo[variable.NoVariable].Decimales,
+                                Valores = columnas.Select(columna => new ReporteCeldaModel
+                                {
+                                    ClaveEtapa = columna.Clave,
+                                    Valor = variable.Etapas.FirstOrDefault(e => e.Clave == columna.Clave)?.Valor
+                                }).ToList()
+                            })
+                            .ToList()
+                    })
+                    .ToList();
+            }
 
             return new ReportePerfilModel
             {
@@ -537,10 +571,14 @@ WHERE TABLE_NAME = '{tableName}'
                 .ThenBy(c => c.Posicion)
                 .ThenBy(c => c.CveCategoria))
             {
-                worksheet.Range(currentRow, 1, currentRow, lastColumn).Merge();
-                worksheet.Cell(currentRow, 1).Value = categoria.Nombre;
-                ApplyCategoryRowStyle(worksheet.Range(currentRow, 1, currentRow, lastColumn));
-                currentRow++;
+                bool drawCategoryHeader = !(categoria.SinCategoria && string.IsNullOrWhiteSpace(categoria.Nombre));
+                if (drawCategoryHeader)
+                {
+                    worksheet.Range(currentRow, 1, currentRow, lastColumn).Merge();
+                    worksheet.Cell(currentRow, 1).Value = categoria.Nombre;
+                    ApplyCategoryRowStyle(worksheet.Range(currentRow, 1, currentRow, lastColumn));
+                    currentRow++;
+                }
 
                 foreach (ReporteFilaModel fila in categoria.Filas.OrderBy(f => f.Posicion))
                 {
@@ -567,7 +605,8 @@ WHERE TABLE_NAME = '{tableName}'
 
         private static int GetTotalExcelBodyRows(ReportePerfilModel reporte)
         {
-            return reporte.Categorias.Sum(categoria => 1 + categoria.Filas.Count);
+            return reporte.Categorias.Sum(categoria =>
+                (categoria.SinCategoria && string.IsNullOrWhiteSpace(categoria.Nombre) ? 0 : 1) + categoria.Filas.Count);
         }
 
         private static void EnsureExcelBodyCapacity(IXLWorksheet worksheet, int rowCount)
@@ -769,11 +808,15 @@ WHERE TABLE_NAME = '{tableName}'
                 .ThenBy(c => c.Posicion)
                 .ThenBy(c => c.CveCategoria))
             {
-                builder.Append("<tr>");
-                builder.Append($"<td colspan=\"{reporte.Columnas.Count + 1}\" style=\"border: solid 1px #d6deed; background-color: #dce9f5; padding: 4px 8px;\">");
-                builder.Append($"<Label style=\"font-family:Helvetica;font-size:8pt;font-weight:bold;color:#1f2937;\">{EscapeHtml(categoria.Nombre)}</Label>");
-                builder.Append("</td>");
-                builder.Append("</tr>");
+                bool drawCategoryHeader = !(categoria.SinCategoria && string.IsNullOrWhiteSpace(categoria.Nombre));
+                if (drawCategoryHeader)
+                {
+                    builder.Append("<tr>");
+                    builder.Append($"<td colspan=\"{reporte.Columnas.Count + 1}\" style=\"border: solid 1px #d6deed; background-color: #dce9f5; padding: 4px 8px;\">");
+                    builder.Append($"<Label style=\"font-family:Helvetica;font-size:8pt;font-weight:bold;color:#1f2937;\">{EscapeHtml(categoria.Nombre)}</Label>");
+                    builder.Append("</td>");
+                    builder.Append("</tr>");
+                }
 
                 foreach (ReporteFilaModel fila in categoria.Filas.OrderBy(f => f.Posicion))
                 {
