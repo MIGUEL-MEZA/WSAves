@@ -10,6 +10,9 @@
         public string MostrarCliente { get; set; }
 
         public List<EtapaResModel> Etapas { get; set; }
+
+        // DebugInfo: opcional, mapea ClaveEtapa -> detalle de cálculos cuando RequestModel.Debug = true
+        public System.Collections.Generic.Dictionary<int, string> DebugInfo { get; set; }
     }
 
 }

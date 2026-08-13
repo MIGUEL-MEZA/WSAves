@@ -233,9 +233,9 @@ namespace WSOptimizerGallinas.Controllers
                 double valor = 0;
                 double valor2 = variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double a = GetFormulas(objReq.Referencia, 1, "a" + p.etapaAlimento.ToString());
-                double b = GetFormulas(objReq.Referencia, 1, "b" + p.etapaAlimento.ToString());
-                double c = GetFormulas(objReq.Referencia, 1, "c" + p.etapaAlimento.ToString());
+                double a = GetFormulas(objReq.Referencia, 1, "a");
+                double b = GetFormulas(objReq.Referencia, 1, "b");
+                double c = GetFormulas(objReq.Referencia, 1, "c");
 
                 valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
 
@@ -264,9 +264,9 @@ namespace WSOptimizerGallinas.Controllers
                 double valor = 0;
                 double valor2 = variable2.Etapas.Find(e => e.Clave == p.Clave).Valor;
 
-                double a = GetFormulas(objReq.Referencia, 1, "a" + p.etapaAlimento.ToString());
-                double b = GetFormulas(objReq.Referencia, 1, "b" + p.etapaAlimento.ToString());
-                double c = GetFormulas(objReq.Referencia, 1, "c" + p.etapaAlimento.ToString());
+                double a = GetFormulas(objReq.Referencia, 1, "a");
+                double b = GetFormulas(objReq.Referencia, 1, "b");
+                double c = GetFormulas(objReq.Referencia, 1, "c");
 
 
                 valor = a * Math.Exp(-Math.Exp(-b * (valor2 - c)));
@@ -845,6 +845,36 @@ namespace WSOptimizerGallinas.Controllers
                 }
 
                 double valor = Utileria.GetFormulaData(dtFor, objReq.Referencia, valor7, valor9, tipoValor, valor18);
+
+                // Añadir info de debug si se solicita
+                if (objReq.Debug)
+                {
+                    double n = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "n");
+                    double a = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "a");
+                    double b = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "b");
+                    double c = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "c");
+                    double d = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "d");
+                    double e = Utileria.GetFormulas(dtFor, objReq.Referencia, tipoValor, "e");
+                    int[] array = { 4, 7, 10, 13, 16 };
+                    string formulaText;
+                    double formulaCalc;
+                    if (System.Array.Exists(array, x => x == tipoValor))
+                    {
+                        formulaCalc = (a * System.Math.Pow(valor7, n)) + (b + c * valor18 + d * System.Math.Pow(valor18, 2)) + e * valor9;
+                        formulaText = $"(a * P^n) + (b + c*MH + d*MH^2) + e*GDP => ({a} * {valor7}^{n}) + ({b} + {c}*{valor18} + {d}*{valor18}^2) + {e}*{valor9}";
+                    }
+                    else
+                    {
+                        formulaCalc = (a * System.Math.Pow(valor7, n)) + (b * System.Math.Pow(valor7, 3) + c * System.Math.Pow(valor7, 2) + d * valor7 + e) * valor9;
+                        formulaText = $"(a * P^n) + (b * P^3 + c * P^2 + d * P + e) * GDP => ({a} * {valor7}^{n}) + ({b} * {valor7}^3 + {c} * {valor7}^2 + {d} * {valor7} + {e}) * {valor9}";
+                    }
+
+                    // Almacenar DebugInfo en la variable local que se está construyendo
+                    if (variable.DebugInfo == null)
+                        variable.DebugInfo = new System.Collections.Generic.Dictionary<int, string>();
+
+                    variable.DebugInfo[p.Clave] = $"{formulaText} = {formulaCalc} (GetFormulaData returned {valor})";
+                }
 
                 return new EtapaResModel(p.Clave, valor);
             }).ToList();

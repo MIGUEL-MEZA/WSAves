@@ -16,6 +16,9 @@
         public string TipoInstalaciones { get; set; }
         
         public List<EtapaModel> EtapasModel { get; set; }
+
+        // Si Debug = true, el servicio incluirá detalles de cálculo por etapa en ResponseDataModel.DebugInfo
+        public bool Debug { get; set; } = false;
     }
 
 }
